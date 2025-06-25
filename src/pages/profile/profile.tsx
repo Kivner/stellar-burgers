@@ -1,15 +1,14 @@
 import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useMemo, useState } from 'react';
+import { useDispatch, userSelectors, useSelector } from '../../services/store';
+import { updateUser } from '../../services/store/user/user-slice';
+import { Preloader } from '@ui';
 
 export const Profile: FC = () => {
-  /** TODO: взять переменную из стора */
-  const user = useMemo(
-    () => ({
-      name: '',
-      email: ''
-    }),
-    []
-  );
+  const user = useSelector(userSelectors.selectUserData)!;
+  const request = useSelector(userSelectors.selectUpdateUserRequest);
+  const error = useSelector(userSelectors.selectUpdateUserError);
+  const dispatch = useDispatch();
 
   const [formValue, setFormValue] = useState({
     name: user.name,
@@ -20,18 +19,22 @@ export const Profile: FC = () => {
   useEffect(() => {
     setFormValue((prevState) => ({
       ...prevState,
-      name: user.name,
-      email: user.email
+      name: user?.name || '',
+      email: user?.email || ''
     }));
-  }, []);
+  }, [user]);
 
-  const isFormChanged =
-    formValue.name !== user?.name ||
-    formValue.email !== user?.email ||
-    !!formValue.password;
+  const isFormChanged = useMemo(
+    () =>
+      formValue.name !== user?.name ||
+      formValue.email !== user?.email ||
+      !!formValue.password,
+    [formValue, user]
+  );
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
+    dispatch(updateUser(formValue));
   };
 
   const handleCancel = (e: SyntheticEvent) => {
@@ -50,13 +53,23 @@ export const Profile: FC = () => {
     }));
   };
 
-  return (
+  const getErrorText = () => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    return 'Update User failed';
+  };
+
+  return request ? (
+    <Preloader />
+  ) : (
     <ProfileUI
       formValue={formValue}
       isFormChanged={isFormChanged}
       handleCancel={handleCancel}
       handleSubmit={handleSubmit}
       handleInputChange={handleInputChange}
+      updateUserError={getErrorText()}
     />
   );
 };

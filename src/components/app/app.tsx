@@ -12,7 +12,7 @@ import {
 import '../../index.css';
 import styles from './app.module.css';
 
-import { AppHeader, Modal, OrderInfo } from '@components';
+import { AppHeader, Modal, OrderInfo, IngredientDetails } from '@components';
 import {
   Route,
   Routes,
@@ -21,6 +21,9 @@ import {
   Navigate
 } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { checkUserAuth, getUser } from '../../services/store/user/user-slice';
+import { useDispatch, RootState, userSelectors } from '../../services/store';
 
 function IngredientsDetails() {
   return null;
@@ -31,15 +34,48 @@ const App = () => {
   const navigate = useNavigate();
   const background = location.state && location.state.background;
 
+  const dispatch = useDispatch(); // Указываем тип для dispatch
+
+  useEffect(() => {
+    dispatch(checkUserAuth());
+  }, [dispatch]);
+
+  const isAuthChecked = useSelector(userSelectors.selectIsAuthChecked);
+  const user = useSelector(userSelectors.selectUserData);
+  const isAuthenticated = user != null;
+
   const handleCloseModal = () => {
     navigate(-1);
   };
 
   useEffect(() => {
-    if (!location.state?.background) {
+    if (isAuthChecked) {
+      if (
+        !isAuthenticated &&
+        (location.pathname === '/profile' ||
+          location.pathname === '/profile/orders')
+      ) {
+        navigate('/login');
+      } else if (
+        isAuthenticated &&
+        (location.pathname === '/login' ||
+          location.pathname === '/register' ||
+          location.pathname === '/forgot-password' ||
+          location.pathname === '/reset-password')
+      ) {
+        navigate('/profile');
+      }
     }
-  }, [location]);
-  const isAuthenticated = true;
+  }, [isAuthenticated, isAuthChecked, location.pathname, navigate]);
+
+  if (!isAuthChecked) {
+    return (
+      <div className={styles.app}>
+        <AppHeader />
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.app}>
@@ -94,7 +130,7 @@ const App = () => {
             path='/ingredients/:id'
             element={
               <Modal title='Ingredient Details' onClose={handleCloseModal}>
-                <IngredientsDetails />
+                <IngredientDetails />
               </Modal>
             }
           />
