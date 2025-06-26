@@ -1,52 +1,41 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+
 import {
   TypedUseSelectorHook,
   useDispatch as dispatchHook,
   useSelector as selectorHook
 } from 'react-redux';
-import { rootReducer } from './root-reducer';
-import { userSlice } from './store/user/user-slice';
-import { constructorSlice } from './store/constructor/constructor-slice';
-import { ingredientsSlice } from './store/ingredients/ingredients-slice';
-import { orderSlice } from './store/order/order-slice';
-import { feedsSlice } from './store/feeds/feeds-slice';
+import { authSystemReducer, userSlice } from './store/user/user-slice';
+import {
+  burgerConstructorReducer,
+  constructorToolkitSlice
+} from './store/constructor/constructor-slice';
+import { orderSystemReducer, orderSlice } from './store/order/order-slice';
 
-// Создаем store
+export const rootReducer = combineReducers({
+  userSlice: authSystemReducer,
+  constructorSlice: burgerConstructorReducer,
+  orderSlice: orderSystemReducer
+});
+
 export const store = configureStore({
   reducer: rootReducer,
-  devTools: process.env.NODE_ENV !== 'production',
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false
-    })
+  devTools: process.env.NODE_ENV !== 'production'
 });
 
 export const userSelectors = userSlice.getSelectors(
-  (state: RootState) => state.user
+  (state: RootState) => state.userSlice
 );
-
-export const constructorSelectors = constructorSlice.getSelectors(
-  (state: RootState) => state.constructor
+export const constructorSelectors = constructorToolkitSlice.getSelectors(
+  (state: RootState) => state.constructorSlice
 );
-
-export const ingredientsSelectors = ingredientsSlice.getSelectors(
-  (state: RootState) => state.ingredients
-);
-
 export const ordersSelectors = orderSlice.getSelectors(
-  (state: RootState) => state.order
+  (state: RootState) => state.orderSlice
 );
 
-export const feedsSelectors = feedsSlice.getSelectors(
-  (state: RootState) => state.feeds
-);
-
-// Типы для TypeScript
 export type RootState = ReturnType<typeof rootReducer>;
+
 export type AppDispatch = typeof store.dispatch;
 
-// Типизированные хуки
 export const useDispatch: () => AppDispatch = () => dispatchHook();
 export const useSelector: TypedUseSelectorHook<RootState> = selectorHook;
-
-export default store;

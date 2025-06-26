@@ -1,31 +1,29 @@
 import { forwardRef, useMemo } from 'react';
 import { TIngredientsCategoryProps } from './type';
 import { TIngredient } from '@utils-types';
-import { IngredientsCategoryUI } from '../ui/ingredients-category';
+import { IngredientsCategoryUI } from '@ui';
 import { constructorSelectors, useSelector } from '../../services/store';
 
 export const IngredientsCategory = forwardRef<
   HTMLUListElement,
   TIngredientsCategoryProps
 >(({ title, titleRef, ingredients }, ref) => {
-  const { bun = null, ingredients: constructorIngredients = [] } =
-    useSelector(constructorSelectors.selectSelection) || {};
+  const burgerConstructor = useSelector(constructorSelectors.getSelectedItems);
 
+  /**
+   * Подсчет количества каждого ингредиента в конструкторе
+   * Оптимизировано с useMemo для избежания лишних пересчетов
+   */
   const ingredientsCounters = useMemo(() => {
-    const counters: Record<string, number> = {};
-
-    // Count constructor ingredients
-    constructorIngredients.forEach((ingredient: TIngredient) => {
-      counters[ingredient._id] = (counters[ingredient._id] || 0) + 1;
+    const { bun, ingredients } = burgerConstructor;
+    const counters: { [key: string]: number } = {};
+    ingredients.forEach((ingredient: TIngredient) => {
+      if (!counters[ingredient._id]) counters[ingredient._id] = 0;
+      counters[ingredient._id]++;
     });
-
-    // Count bun (always counts as 2)
-    if (bun) {
-      counters[bun._id] = 2;
-    }
-
+    if (bun) counters[bun._id] = 2;
     return counters;
-  }, [bun, constructorIngredients]);
+  }, [burgerConstructor]);
 
   return (
     <IngredientsCategoryUI

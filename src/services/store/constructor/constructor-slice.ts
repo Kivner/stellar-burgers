@@ -1,91 +1,111 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-  TConstructorIngredient,
-  TConstructorState,
-  TIngredient
-} from '@utils-types';
+import { TConstructorState, TIngredient } from '@utils-types';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getIngredientsApi } from '@api';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define the initial state structure
 const initialState: TConstructorState = {
   items: {
-    bun: null,
-    ingredients: []
-  }
+    bun: null, // Текущие выбранные булки (х2)
+    ingredients: [] // Список выбранных ингредиентов
+  },
+  ingredients: [], // Полный список доступных ингредиентов
+  ingredientsRequest: false, // Флаг загрузки ингредиентов
+  selectedIngredient: null // ID выбранного ингредиента для просмотра
 };
 
-// Helper function to create constructor ingredients with unique IDs
-const createConstructorIngredient = (
-  ingredient: TIngredient
-): TConstructorIngredient => ({
-  ...ingredient,
-  id: uuidv4()
-});
+// Загрузка всех ингредиентов
+export const fetchAllIngredients = createAsyncThunk(
+  'ingredients/fetchAll',
+  async () => await getIngredientsApi()
+);
 
-export const constructorSlice = createSlice({
-  name: 'constructor',
+export const constructorToolkitSlice = createSlice({
+  name: 'burgerConstructor',
   initialState,
+  // Селекторы для доступа к данным
   selectors: {
-    selectSelection: (state: TConstructorState) => state.items,
-    selectBun: (state: TConstructorState) => state.items.bun,
-    selectIngredients: (state: TConstructorState) => state.items.ingredients
-  },
+    getSelectedItems: (state) => state.items, // Выбранные ингредиенты
+    getAllIngredients: (state) => state.ingredients, // Все ингредиенты
+    getLoadingStatus: (state) => state.ingredientsRequest, // Статус загрузки
+    getCurrentIngredient: (state) =>
+      state.ingredients.find((item) => item._id === state.selectedIngredient) ??
+      null
+  }, // Найти текущий выбранный ингредиент
+  // Синхронные редьюсеры
   reducers: {
-    addIngredient: (state, action: PayloadAction<TIngredient>) => {
-      if (action.payload.type === 'bun') {
-        console.log(state.items.bun);
-        state.items.bun = { ...action.payload, id: 'bun' };
-      } else {
-        console.log(state.items.bun);
-        state.items.ingredients.push({
-          ...action.payload,
-          id: uuidv4()
-        });
-      }
+    // Добавление нового ингредиента
+    addNewIngredient: (state, { payload }: PayloadAction<TIngredient>) => {
+      payload.type === 'bun'
+        ? (state.items.bun = { ...payload, id: 'bun' })
+        : state.items.ingredients.push({
+            ...payload,
+            id: uuidv4()
+          });
     },
-    removeIngredient: (state, action: PayloadAction<string>) => {
+    // Удаление ингредиента по id
+    removeIngredient: (state, { payload }: PayloadAction<string>) => {
       state.items.ingredients = state.items.ingredients.filter(
-        (ing) => ing.id !== action.payload
+        (item) => item.id !== payload
       );
     },
-    moveUpIngredient: (state, action: PayloadAction<string>) => {
-      const { ingredients } = state.items;
-      const index = ingredients.findIndex((ing) => ing.id === action.payload);
+    // Перемещение ингредиента вверх
+    shiftIngredientUp: (state, { payload }: PayloadAction<string>) => {
+      const ingredientsArray = state.items.ingredients;
+      const currentIndex = ingredientsArray.findIndex(
+        (ing) => ing.id === payload
+      );
 
-      if (index > 0) {
-        [ingredients[index], ingredients[index - 1]] = [
-          ingredients[index - 1],
-          ingredients[index]
+      if (currentIndex > 0) {
+        [ingredientsArray[currentIndex], ingredientsArray[currentIndex - 1]] = [
+          ingredientsArray[currentIndex - 1],
+          ingredientsArray[currentIndex]
         ];
       }
     },
-    moveDownIngredient: (state, action: PayloadAction<string>) => {
-      const { ingredients } = state.items;
-      const index = ingredients.findIndex((ing) => ing.id === action.payload);
+    // Перемещение ингредиента вниз
+    shiftIngredientDown: (state, { payload }: PayloadAction<string>) => {
+      const ingredientsArray = state.items.ingredients;
+      const currentIndex = ingredientsArray.findIndex(
+        (ing) => ing.id === payload
+      );
 
-      if (index >= 0 && index < ingredients.length - 1) {
-        [ingredients[index], ingredients[index + 1]] = [
-          ingredients[index + 1],
-          ingredients[index]
+      if (currentIndex !== -1 && currentIndex < ingredientsArray.length - 1) {
+        [ingredientsArray[currentIndex], ingredientsArray[currentIndex + 1]] = [
+          ingredientsArray[currentIndex + 1],
+          ingredientsArray[currentIndex]
         ];
       }
     },
-    clearConstructor: (state) => {
-      state.items = initialState.items;
+    // Установка выбранного ингредиента для просмотра
+    setSelectedIngredient: (
+      state,
+      { payload }: PayloadAction<string | null>
+    ) => {
+      state.selectedIngredient = payload;
+    },
+    // Сброс конструктора
+    resetConstructor: (state) => {
+      state.items = {
+        bun: null,
+        ingredients: []
+      };
+      state.selectedIngredient = null;
+      state.ingredientsRequest = false;
     }
+  },
+  // Обработка асинхронных операций
+  extraReducers: (builder) => {
+    builder
+      // Начало загрузки ингредиентов
+      .addCase(fetchAllIngredients.pending, (state) => {
+        state.ingredientsRequest = true;
+      })
+      // Успешная загрузка ингредиентов
+      .addCase(fetchAllIngredients.fulfilled, (state, { payload }) => {
+        state.ingredientsRequest = false;
+        state.ingredients = payload;
+      });
   }
 });
 
-// Export actions
-export const {
-  addIngredient,
-  removeIngredient,
-  clearConstructor,
-  moveUpIngredient,
-  moveDownIngredient
-} = constructorSlice.actions;
-
-// Export selectors with proper typing
-export const { selectSelection } = constructorSlice.selectors;
-
-export default constructorSlice.reducer;
+export const burgerConstructorReducer = constructorToolkitSlice.reducer;

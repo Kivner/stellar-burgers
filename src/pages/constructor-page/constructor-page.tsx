@@ -1,8 +1,7 @@
 import {
   useSelector,
   useDispatch,
-  constructorSelectors,
-  ingredientsSelectors
+  constructorSelectors
 } from '../../services/store';
 
 import styles from './constructor-page.module.css';
@@ -11,16 +10,19 @@ import { BurgerIngredients } from '@components';
 import { BurgerConstructor } from '@components';
 import { Preloader } from '@ui';
 import { FC, useEffect } from 'react';
-import { loadIngredients } from '../../services/store/ingredients/ingredients-slice';
+import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
 
 export const ConstructorPage: FC = () => {
   const dispatch = useDispatch();
+
+  // Получаем статус загрузки ингредиентов из Redux store
   const isIngredientsLoading = useSelector(
-    ingredientsSelectors.selectIngredientsLoading
+    constructorSelectors.getLoadingStatus
   );
 
+  // Эффект для загрузки ингредиентов при монтировании компонента
   useEffect(() => {
-    dispatch(loadIngredients());
+    dispatch(fetchAllIngredients());
   }, []);
 
   return (

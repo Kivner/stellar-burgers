@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react';
+import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
 import {
   constructorSelectors,
@@ -6,43 +7,51 @@ import {
   useDispatch,
   useSelector
 } from '../../services/store';
-import { clearConstructor } from '../../services/store/constructor/constructor-slice';
-import { orderSlice, placeOrder } from '../../services/store/order/order-slice';
+import { constructorToolkitSlice } from '../../services/store/constructor/constructor-slice';
+import {
+  createOrder,
+  orderSlice
+} from '../../services/store/order/order-slice';
 
 export const BurgerConstructor: FC = () => {
-  // Add fallback values in case selectSelection returns undefined
-  const { bun = null, ingredients = [] } =
-    useSelector(constructorSelectors.selectSelection) || {};
-
-  const orderModalData = useSelector(ordersSelectors.selectNewOrder);
-  const orderRequest = useSelector(ordersSelectors.selectOrderRequest);
+  const constructorItems = useSelector(constructorSelectors.getSelectedItems);
+  const orderModalData = useSelector(ordersSelectors.getCreatedOrder);
+  const Loading = useSelector(ordersSelectors.getOrderLoading);
   const dispatch = useDispatch();
 
+  // Обработчик оформления заказа
   const onOrderClick = () => {
-    if (!bun || orderRequest) return;
-
-    dispatch(placeOrder([bun._id, ...ingredients.map((it) => it._id)]));
-  };
-
-  const closeOrderModal = () => {
-    dispatch(orderSlice.actions.clearNewOrder());
-    dispatch(clearConstructor());
-  };
-
-  const price = useMemo(() => {
-    const bunPrice = bun ? bun.price * 2 : 0;
-    const ingredientsPrice = ingredients.reduce(
-      (sum, ing) => sum + ing.price,
-      0
+    if (!constructorItems.bun || Loading) return;
+    dispatch(
+      createOrder([
+        constructorItems.bun._id,
+        ...constructorItems.ingredients.map((it) => it._id)
+      ])
     );
-    return bunPrice + ingredientsPrice;
-  }, [bun, ingredients]);
+  };
+
+  // Обработчик закрытия модального окна заказа
+  const closeOrderModal = () => {
+    dispatch(orderSlice.actions.resetCreatedOrder());
+    dispatch(constructorToolkitSlice.actions.resetConstructor());
+  };
+
+  // Вычисляем общую стоимость бургера с мемоизацией
+  const price = useMemo(
+    () =>
+      (constructorItems.bun ? constructorItems.bun.price * 2 : 0) +
+      constructorItems.ingredients.reduce(
+        (s: number, v: TConstructorIngredient) => s + v.price,
+        0
+      ),
+    [constructorItems]
+  );
 
   return (
     <BurgerConstructorUI
       price={price}
-      orderRequest={orderRequest}
-      constructorItems={{ bun, ingredients }}
+      orderRequest={Loading}
+      constructorItems={constructorItems}
       orderModalData={orderModalData}
       onOrderClick={onOrderClick}
       closeOrderModal={closeOrderModal}

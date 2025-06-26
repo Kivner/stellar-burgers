@@ -1,31 +1,37 @@
 import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
-import { TOrder } from '@utils-types';
 import { FC, useEffect } from 'react';
-import { loadFeed } from '../../services/store/feeds/feeds-slice';
-import { feedsSelectors, useDispatch, useSelector } from '../../services/store';
-import { loadIngredients } from '../../services/store/ingredients/ingredients-slice';
+import {
+  ordersSelectors,
+  useDispatch,
+  useSelector
+} from '../../services/store';
+import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
+import { fetchFeedData } from '../../services/store/order/order-slice';
 
 export const Feed: FC = () => {
   const dispatch = useDispatch();
+  // Получаем данные из Redux store
+  const feed = useSelector(ordersSelectors.getLiveFeed);
+  const loading = useSelector(ordersSelectors.getFeedLoading);
 
+  // Эффект для загрузки данных при монтировании компонента
   useEffect(() => {
-    dispatch(loadFeed());
-    dispatch(loadIngredients());
+    dispatch(fetchFeedData());
+    dispatch(fetchAllIngredients());
   }, []);
 
-  const feed = useSelector(feedsSelectors.selectFeed);
-  const request = useSelector(feedsSelectors.selectFeedRequest);
-
-  if (request || !feed) {
-    return <Preloader />;
+  // Показываем Preloader во время загрузки
+  if (loading || !feed) {
+    return <Preloader data-testid='preloader' />;
   }
 
   return (
     <FeedUI
+      data-testid='feed'
       orders={feed.orders}
       handleGetFeeds={() => {
-        dispatch(loadFeed());
+        dispatch(fetchFeedData());
       }}
     />
   );

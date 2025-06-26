@@ -16,20 +16,19 @@ export type TConstructorIngredient = TIngredient & {
   id: string;
 };
 
+export type TTabMode = 'bun' | 'sauce' | 'main';
+
 export type TConstructorSelection = {
   bun: TConstructorIngredient | null;
   ingredients: TConstructorIngredient[];
 };
 
-export interface TConstructorState {
+export type TConstructorState = {
   items: TConstructorSelection;
-}
-
-export interface TIngredientsState {
   ingredients: TIngredient[];
-  loading: boolean;
+  ingredientsRequest: boolean;
   selectedIngredient: string | null;
-}
+};
 
 export type TOrder = {
   _id: string;
@@ -47,16 +46,28 @@ export type TOrdersData = {
   totalToday: number;
 };
 
+export type TFeed = {
+  orders: TOrder[];
+  total: number;
+  totalToday: number;
+};
+
 export type TOrdersState = {
   orderRequest: boolean;
-  orderError: string | Error | null;
+  orderError: null | unknown;
   newOrder: TOrder | null;
+
   history: TOrder[];
   historyRequest: boolean;
-  selectedOrderId: null | unknown;
+
+  feed: TFeed | null;
+  feedRequest: boolean;
+  feedError: null | unknown;
+
+  selectedOrderId: number | null;
   selectedOrder: TOrder | null;
   selectedOrderRequest: boolean;
-  selectedOrderError: string | Error | null;
+  selectedOrderError: null | unknown;
 };
 
 export type TUser = {
@@ -64,43 +75,14 @@ export type TUser = {
   name: string;
 };
 
-export type IUserState = {
-  data: null | TUser;
-
+export type TUserState = {
   isAuthChecked: boolean;
   isAuthenticated: boolean;
-
-  loginUserError: string | Error | null;
-  loginUserRequest: boolean;
-
-  registerUserError: string | Error | null;
-  registerUserRequest: boolean;
-
-  updateUserError: string | Error | null;
-  updateUserRequest: boolean;
-};
-
-export type TFeed = {
-  orders: TOrder[];
-  total: number;
-  totalToday: number;
-};
-
-export type IFeedState = {
-  feed: TFeed | null;
-  feedRequest: boolean;
-  feedError: null | unknown;
-};
-
-export type TTabMode = 'bun' | 'sauce' | 'main';
-
-export type TLoginData = {
-  email: string;
-  password: string;
-};
-
-export type TRegisterData = {
-  email: string;
-  name: string;
-  password: string;
+  userInfo: null | TUser;
+  authError: null | unknown;
+  authLoading: boolean;
+  regError: null | unknown;
+  regLoading: boolean;
+  profileUpdateError: null | unknown;
+  profileUpdateLoading: boolean;
 };

@@ -2,22 +2,29 @@ import { FC, memo } from 'react';
 import { BurgerConstructorElementUI } from '@ui';
 import { BurgerConstructorElementProps } from './type';
 import { useDispatch } from '../../services/store';
-import { constructorSlice } from '../../services/store/constructor/constructor-slice';
+import { constructorToolkitSlice } from '../../services/store/constructor/constructor-slice';
 
 export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
   ({ ingredient, index, totalItems }) => {
     const dispatch = useDispatch();
 
+    // Обработчик перемещения элемента вниз
     const handleMoveDown = () => {
-      dispatch(constructorSlice.actions.moveDownIngredient(ingredient.id));
+      dispatch(
+        constructorToolkitSlice.actions.shiftIngredientDown(ingredient.id)
+      );
     };
 
+    // Обработчик перемещения элемента вверх
     const handleMoveUp = () => {
-      dispatch(constructorSlice.actions.moveUpIngredient(ingredient.id));
+      dispatch(
+        constructorToolkitSlice.actions.shiftIngredientUp(ingredient.id)
+      );
     };
 
+    // Обработчик удаления элемента
     const handleClose = () => {
-      dispatch(constructorSlice.actions.removeIngredient(ingredient.id));
+      dispatch(constructorToolkitSlice.actions.removeIngredient(ingredient.id));
     };
 
     return (

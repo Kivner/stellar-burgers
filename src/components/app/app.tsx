@@ -1,3 +1,8 @@
+import React, { useCallback, useEffect } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from '../../services/store';
+import { verifyAuthStatus } from '../../services/store/user/user-slice';
+import { ProtectedRoute } from '../protected-route';
 import {
   ConstructorPage,
   Feed,
@@ -9,137 +14,132 @@ import {
   Register,
   ResetPassword
 } from '@pages';
+import { AppHeader, IngredientDetails, Modal, OrderInfo } from '@components';
 import '../../index.css';
 import styles from './app.module.css';
-
-import { AppHeader, Modal, OrderInfo, IngredientDetails } from '@components';
-import {
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  Navigate
-} from 'react-router-dom';
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { checkUserAuth, getUser } from '../../services/store/user/user-slice';
-import { useDispatch, RootState, userSelectors } from '../../services/store';
-
-function IngredientsDetails() {
-  return null;
-}
 
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const background = location.state && location.state.background;
+  const dispatch = useDispatch();
 
-  const dispatch = useDispatch(); // Указываем тип для dispatch
+  // background location, хранит предыдущий маршрут
+  const background = (location.state as { background?: Location })?.background;
 
   useEffect(() => {
-    dispatch(checkUserAuth());
+    dispatch(verifyAuthStatus());
   }, [dispatch]);
 
-  const isAuthChecked = useSelector(userSelectors.selectIsAuthChecked);
-  const user = useSelector(userSelectors.selectUserData);
-  const isAuthenticated = user != null;
-
-  const handleCloseModal = () => {
-    navigate(-1);
-  };
-
-  useEffect(() => {
-    if (isAuthChecked) {
-      if (
-        !isAuthenticated &&
-        (location.pathname === '/profile' ||
-          location.pathname === '/profile/orders')
-      ) {
-        navigate('/login');
-      } else if (
-        isAuthenticated &&
-        (location.pathname === '/login' ||
-          location.pathname === '/register' ||
-          location.pathname === '/forgot-password' ||
-          location.pathname === '/reset-password')
-      ) {
-        navigate('/profile');
-      }
+  // Обработчик закрытия модального окна
+  const handleModalClose = useCallback(() => {
+    if (background) {
+      navigate(`${background.pathname}${background.search}`, {
+        replace: true,
+        state: {}
+      });
+      return;
     }
-  }, [isAuthenticated, isAuthChecked, location.pathname, navigate]);
-
-  if (!isAuthChecked) {
-    return (
-      <div className={styles.app}>
-        <AppHeader />
-        <p>Loading...</p>
-      </div>
-    );
-  }
+    navigate(-1);
+  }, [background, navigate]);
 
   return (
     <div className={styles.app}>
+      {/* Шапка приложения, отображается на всех страницах */}
       <AppHeader />
+
+      {/* Основные маршруты приложения */}
       <Routes location={background || location}>
+        {/* Главная страница с конструктором бургеров */}
         <Route path='/' element={<ConstructorPage />} />
+        {/* Лента заказов */}
         <Route path='/feed' element={<Feed />} />
+
+        {/* Маршруты для авторизации (доступны только для неавторизованных) */}
         <Route
           path='/login'
-          element={isAuthenticated ? <Navigate to='/profile' /> : <Login />}
+          element={
+            <ProtectedRoute onlyUnAuth>
+              <Login />
+            </ProtectedRoute>
+          }
         />
         <Route
           path='/register'
-          element={isAuthenticated ? <Navigate to='/profile' /> : <Register />}
+          element={
+            <ProtectedRoute onlyUnAuth>
+              <Register />
+            </ProtectedRoute>
+          }
         />
         <Route
           path='/forgot-password'
           element={
-            isAuthenticated ? <Navigate to='/profile' /> : <ForgotPassword />
+            <ProtectedRoute onlyUnAuth>
+              <ForgotPassword />
+            </ProtectedRoute>
           }
         />
         <Route
           path='/reset-password'
           element={
-            isAuthenticated ? <Navigate to='/profile' /> : <ResetPassword />
+            <ProtectedRoute onlyUnAuth>
+              <ResetPassword />
+            </ProtectedRoute>
           }
         />
+
+        {/* Защищенные маршруты профиля (только для авторизованных) */}
         <Route
           path='/profile'
-          element={!isAuthenticated ? <Navigate to='/login' /> : <Profile />}
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
         />
         <Route
           path='/profile/orders'
           element={
-            !isAuthenticated ? <Navigate to='/login' /> : <ProfileOrders />
+            <ProtectedRoute>
+              <ProfileOrders />
+            </ProtectedRoute>
           }
         />
+
+        {/* Маршрут для несуществующих страниц */}
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
+      {/* Маршруты для модальных окон - рендерятся когда есть background location */}
       {background && (
         <Routes>
-          <Route
-            path='/feed/:number'
-            element={
-              <Modal title='Order Details' onClose={handleCloseModal}>
-                <OrderInfo />
-              </Modal>
-            }
-          />
+          {/* Модальное окно с деталями ингредиента */}
           <Route
             path='/ingredients/:id'
             element={
-              <Modal title='Ingredient Details' onClose={handleCloseModal}>
+              <Modal title='Детали ингредиента' onClose={handleModalClose}>
                 <IngredientDetails />
               </Modal>
             }
           />
+          {/* Модальное окно с информацией о заказе из очереди */}
+          <Route
+            path='/feed/:number'
+            element={
+              <Modal title='Информация о заказе' onClose={handleModalClose}>
+                <OrderInfo />
+              </Modal>
+            }
+          />
+          {/* Модальное окно с информацией о заказе из профиля */}
           <Route
             path='/profile/orders/:number'
             element={
-              <Modal title='Order Details' onClose={handleCloseModal}>
-                <OrderInfo />
-              </Modal>
+              <ProtectedRoute>
+                <Modal title='Информация о заказе' onClose={handleModalClose}>
+                  <OrderInfo />
+                </Modal>
+              </ProtectedRoute>
             }
           />
         </Routes>

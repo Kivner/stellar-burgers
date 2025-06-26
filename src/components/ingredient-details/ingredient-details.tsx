@@ -1,40 +1,41 @@
 import { FC, useEffect } from 'react';
-import { Preloader } from '../ui/preloader';
-import { IngredientDetailsUI } from '../ui/ingredient-details';
-import {
-  loadIngredients,
-  selectIngredient
-} from '../../services/store/ingredients/ingredients-slice';
+import { Preloader } from '@ui';
+import { IngredientDetailsUI } from '@ui';
+import { useParams } from 'react-router-dom';
 import {
   constructorSelectors,
-  ingredientsSelectors,
-  useDispatch
+  useDispatch,
+  useSelector
 } from '../../services/store';
-import { useParams } from 'react-router-dom';
-import { constructorSlice } from '../../services/store/constructor/constructor-slice';
-import { useSelector } from 'react-redux';
+import {
+  constructorToolkitSlice,
+  fetchAllIngredients
+} from '../../services/store/constructor/constructor-slice';
 
 export const IngredientDetails: FC = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
+  // Эффект для загрузки всех ингредиентов при монтировании компонента
   useEffect(() => {
-    dispatch(loadIngredients());
+    dispatch(fetchAllIngredients());
   }, []);
+  // Эффект для управления выбранным ингредиентом
   useEffect(() => {
-    dispatch(selectIngredient(id ?? null));
+    dispatch(constructorToolkitSlice.actions.setSelectedIngredient(id ?? null));
     return () => {
-      dispatch(selectIngredient(null));
+      dispatch(constructorToolkitSlice.actions.setSelectedIngredient(null));
     };
   }, [id]);
 
-  const ingredientData = useSelector(
-    ingredientsSelectors.selectSelectedIngredient
-  );
+  // Получаем данные текущего ингредиента из Redux store
+  const ingredientData = useSelector(constructorSelectors.getCurrentIngredient);
 
+  // Если данные еще не загружены, показываем прелоадер
   if (!ingredientData) {
     return <Preloader />;
   }
 
+  // Рендерим UI компонент с передачей данных ингредиента
   return <IngredientDetailsUI ingredientData={ingredientData} />;
 };

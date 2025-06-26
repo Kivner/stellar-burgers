@@ -1,23 +1,23 @@
 import { ProfileOrdersUI } from '@ui-pages';
-import { TOrder } from '@utils-types';
 import { FC, useEffect } from 'react';
-import { loadUserHistory } from '../../services/store/order/order-slice';
 import {
   ordersSelectors,
   useDispatch,
   useSelector
 } from '../../services/store';
-import { loadIngredients } from '../../services/store/ingredients/ingredients-slice';
 import { Preloader } from '@ui';
+import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
+import { fetchUserOrders } from '../../services/store/order/order-slice';
 
 export const ProfileOrders: FC = () => {
   const dispatch = useDispatch();
-  const request = useSelector(ordersSelectors.selectHistoryRequest);
-  const history = useSelector(ordersSelectors.selectHistory);
+  const history = useSelector(ordersSelectors.getOrderHistory);
+  const request = useSelector(ordersSelectors.getHistoryLoading);
 
+  // Эффект для загрузки данных при монтировании
   useEffect(() => {
-    dispatch(loadUserHistory());
-    dispatch(loadIngredients());
+    dispatch(fetchUserOrders());
+    dispatch(fetchAllIngredients());
   }, []);
 
   return request ? <Preloader /> : <ProfileOrdersUI orders={history} />;

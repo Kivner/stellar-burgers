@@ -1,22 +1,21 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RegisterUI } from '@ui-pages';
 import { useDispatch, userSelectors, useSelector } from '../../services/store';
-import { registerUser } from '../../services/store/user/user-slice';
 import { Preloader } from '@ui';
+import { registerNewUser } from '../../services/store/user/user-slice';
 
 export const Register: FC = () => {
   const dispatch = useDispatch();
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const loading = useSelector(userSelectors.selectRegisterRequest);
-  const error = useSelector(userSelectors.selectRegisterError);
-
+  const loading = useSelector(userSelectors.getRegistrationLoading);
+  const error = useSelector(userSelectors.getRegistrationError);
+  // Обработчик подтверждения регистрации
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
     dispatch(
-      registerUser({
+      registerNewUser({
         email,
         password,
         name: userName
@@ -24,6 +23,7 @@ export const Register: FC = () => {
     );
   };
 
+  // Форматирование текста с ошибкой
   const getErrorText = () => {
     if (!error) return '';
     if (typeof error === 'string') return error;

@@ -1,107 +1,158 @@
-// src/store/order/order-slice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { TOrder, TOrdersState } from '@utils-types';
-import { getOrderByNumberApi, getOrdersApi, orderBurgerApi } from '@api';
+import { TFeed, TOrdersState } from '@utils-types';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {
+  getFeedsApi,
+  getOrderByNumberApi,
+  getOrdersApi,
+  orderBurgerApi
+} from '@api';
 
-const initialState: TOrdersState = {
-  orderError: null,
-  orderRequest: false,
-  newOrder: null,
+const initialOrdersState: TOrdersState = {
+  // Состояние создания заказа
+  orderError: null, // Ошибка при создании
+  orderRequest: false, // Флаг загрузки
+  newOrder: null, // Созданный заказ
 
-  history: [],
-  historyRequest: false,
+  // История заказов пользователя
+  history: [], // Список заказов
+  historyRequest: false, // Флаг загрузки истории
 
-  selectedOrder: null,
-  selectedOrderError: null,
-  selectedOrderId: null,
-  selectedOrderRequest: false
+  // Лента заказов
+  feed: null, // Данные ленты
+  feedRequest: false, // Флаг загрузки ленты
+  feedError: null, // Ошибка загрузки ленты
+
+  // Детали конкретного заказа
+  selectedOrder: null, // Данные выбранного заказа
+  selectedOrderError: null, // Ошибка загрузки
+  selectedOrderId: null, // ID выбранного заказа
+  selectedOrderRequest: false // Флаг загрузки
 };
 
-export const placeOrder = createAsyncThunk(
-  'order/placeOrder',
-  async (ingredientIds: string[]) => {
-    try {
-      const data = await orderBurgerApi(ingredientIds);
-      return data.order;
-    } catch (error) {
-      return Promise.reject(error);
-    }
+// Создание нового заказа
+export const createOrder = createAsyncThunk(
+  'orders/create',
+  async (ingredients: string[], { rejectWithValue }) => {
+    const response = await orderBurgerApi(ingredients);
+    return response.success ? response.order : rejectWithValue(response);
   }
 );
 
-export const loadUserHistory = createAsyncThunk(
-  'orders/loadUserHistory',
+// Получение истории заказов пользователя
+export const fetchUserOrders = createAsyncThunk(
+  'orders/fetchUserOrders',
   async () => await getOrdersApi()
 );
 
-export const loadOrder = createAsyncThunk(
-  'orders/loadOrder',
-  async (id: number, { rejectWithValue, dispatch }) => {
-    dispatch(orderSlice.actions.setSelectedOrderId(id));
-    const data = await getOrderByNumberApi(id);
-    if (!data.success) {
-      return rejectWithValue(data);
-    }
-    return data.orders[0];
+// Получение списка заказов (всех заказов в системе)
+export const fetchFeedData = createAsyncThunk(
+  'orders/fetchFeed',
+  async (_, { rejectWithValue }) => {
+    const result = await getFeedsApi();
+    return result.success
+      ? ({
+          orders: result.orders,
+          total: result.total,
+          totalToday: result.totalToday
+        } as TFeed)
+      : rejectWithValue(result);
+  }
+);
+
+// Получение деталей конкретного заказа по номеру
+export const fetchOrderDetails = createAsyncThunk(
+  'orders/fetchDetails',
+  async (orderId: number, { rejectWithValue, dispatch }) => {
+    dispatch(orderActions.setOrderId(orderId));
+    const apiResponse = await getOrderByNumberApi(orderId);
+    return apiResponse.success
+      ? apiResponse.orders[0]
+      : rejectWithValue(apiResponse);
   }
 );
 
 export const orderSlice = createSlice({
-  name: 'order',
-  initialState,
+  name: 'orderSystem',
+  initialState: initialOrdersState,
+  // Селекторы для доступа к данным
   selectors: {
-    selectOrderRequest: (state) => state.orderRequest,
-    selectOrderError: (state) => state.orderError,
-    selectNewOrder: (state) => state.newOrder,
+    getOrderLoading: (state) => state.orderRequest,
+    getOrderError: (state) => state.orderError,
+    getCreatedOrder: (state) => state.newOrder,
 
-    selectHistoryRequest: (state) => state.historyRequest,
-    selectHistory: (state) => state.history,
+    getHistoryLoading: (state) => state.historyRequest,
+    getOrderHistory: (state) => state.history,
 
-    selectSelectedOrder: (state) => state.selectedOrder,
-    selectSelectedOrderRequest: (state) => state.selectedOrderRequest
+    getCurrentOrder: (state) => state.selectedOrder,
+    getCurrentOrderLoading: (state) => state.selectedOrderRequest,
+
+    getLiveFeed: (state) => state.feed,
+    getFeedLoading: (state) => state.feedRequest,
+    getFeedError: (state) => state.feedError
   },
+  // Синхронные действия
   reducers: {
-    clearNewOrder(state) {
+    // Сброс данных о созданном заказе
+    resetCreatedOrder(state) {
       state.newOrder = null;
     },
-    setSelectedOrderId(state, action: PayloadAction<number | null>) {
-      state.selectedOrderId = action.payload;
+    // Установка ID выбранного заказа
+    setOrderId(state, { payload }: PayloadAction<number | null>) {
+      state.selectedOrderId = payload;
     }
   },
+  // Обработка асинхронных действий
   extraReducers: (builder) => {
     builder
-      .addCase(placeOrder.pending, (state) => {
+      // Создание заказа
+      .addCase(createOrder.pending, (state) => {
         state.orderRequest = true;
         state.orderError = null;
       })
-      .addCase(placeOrder.rejected, (state, action) => {
+      .addCase(createOrder.rejected, (state, { error }) => {
         state.orderRequest = false;
-        state.orderError = action.error.message || 'Place order failed';
+        state.orderError = error;
       })
-      .addCase(placeOrder.fulfilled, (state, action) => {
+      .addCase(createOrder.fulfilled, (state, { payload }) => {
         state.orderRequest = false;
-        state.newOrder = action.payload;
+        state.newOrder = payload;
       })
-      .addCase(loadUserHistory.pending, (state) => {
+      // История заказов пользователя
+      .addCase(fetchUserOrders.pending, (state) => {
         state.historyRequest = true;
       })
-      .addCase(loadUserHistory.fulfilled, (state, action) => {
+      .addCase(fetchUserOrders.fulfilled, (state, { payload }) => {
         state.historyRequest = false;
-        state.history = action.payload;
+        state.history = payload;
       })
-      .addCase(loadOrder.pending, (state) => {
-        state.orderRequest = true;
-        state.orderError = null;
+      // Детали заказа
+      .addCase(fetchOrderDetails.pending, (state) => {
+        state.selectedOrderRequest = true;
+        state.selectedOrderError = null;
       })
-      .addCase(loadOrder.rejected, (state, action) => {
-        state.orderRequest = false;
-        state.orderError = action.error.message || 'Load order failed';
+      .addCase(fetchOrderDetails.rejected, (state, { payload }) => {
+        state.selectedOrderRequest = false;
+        state.selectedOrderError = payload;
       })
-      .addCase(loadOrder.fulfilled, (state, action) => {
-        state.orderRequest = false;
-        state.selectedOrder = action.payload;
+      .addCase(fetchOrderDetails.fulfilled, (state, { payload }) => {
+        state.selectedOrderRequest = false;
+        state.selectedOrder = payload;
+      })
+      // Лента заказов
+      .addCase(fetchFeedData.pending, (state) => {
+        state.feedRequest = true;
+        state.feedError = null;
+      })
+      .addCase(fetchFeedData.rejected, (state, { payload }) => {
+        state.feedRequest = false;
+        state.feedError = payload;
+      })
+      .addCase(fetchFeedData.fulfilled, (state, { payload }) => {
+        state.feedRequest = false;
+        state.feed = payload;
       });
   }
 });
 
-export default orderSlice.reducer;
+export const orderActions = orderSlice.actions;
+export const orderSystemReducer = orderSlice.reducer;
