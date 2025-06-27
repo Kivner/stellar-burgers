@@ -107,7 +107,13 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path='/profile/orders/:number'
+          element={<ProtectedRoute children={<OrderInfo />} />}
+        />
 
+        <Route path='/ingredients/:id' element={<IngredientDetails />} />
+        <Route path='/feed/:number' element={<OrderInfo />} />
         {/* Маршрут для несуществующих страниц */}
         <Route path='*' element={<NotFound404 />} />
       </Routes>
