@@ -5,6 +5,7 @@ import {
   constructorSelectors,
   ordersSelectors,
   useDispatch,
+  userSelectors,
   useSelector
 } from '../../services/store';
 import { constructorToolkitSlice } from '../../services/store/constructor/constructor-slice';
@@ -12,16 +13,23 @@ import {
   createOrder,
   orderSlice
 } from '../../services/store/order/order-slice';
+import { useNavigate } from 'react-router-dom';
 
 export const BurgerConstructor: FC = () => {
+  const navigate = useNavigate();
   const constructorItems = useSelector(constructorSelectors.getSelectedItems);
   const orderModalData = useSelector(ordersSelectors.getCreatedOrder);
-  const Loading = useSelector(ordersSelectors.getOrderLoading);
+  const loading = useSelector(ordersSelectors.getOrderLoading);
+  const isAuth = useSelector(userSelectors.getUserProfile);
   const dispatch = useDispatch();
 
   // Обработчик оформления заказа
   const onOrderClick = () => {
-    if (!constructorItems.bun || Loading) return;
+    if (!isAuth) {
+      navigate('/login');
+      return;
+    }
+    if (!constructorItems.bun || loading) return;
     dispatch(
       createOrder([
         constructorItems.bun._id,
@@ -50,7 +58,7 @@ export const BurgerConstructor: FC = () => {
   return (
     <BurgerConstructorUI
       price={price}
-      orderRequest={Loading}
+      orderRequest={loading}
       constructorItems={constructorItems}
       orderModalData={orderModalData}
       onOrderClick={onOrderClick}
