@@ -16,6 +16,20 @@ export type TConstructorIngredient = TIngredient & {
   id: string;
 };
 
+export type TTabMode = 'bun' | 'sauce' | 'main';
+
+export type TConstructorSelection = {
+  bun: TConstructorIngredient | null;
+  ingredients: TConstructorIngredient[];
+};
+
+export type TConstructorState = {
+  items: TConstructorSelection;
+  ingredients: TIngredient[];
+  ingredientsRequest: boolean;
+  selectedIngredient: string | null;
+};
+
 export type TOrder = {
   _id: string;
   status: string;
@@ -26,10 +40,28 @@ export type TOrder = {
   ingredients: string[];
 };
 
-export type TOrdersData = {
+export type TFeed = {
   orders: TOrder[];
   total: number;
   totalToday: number;
+};
+
+export type TOrdersState = {
+  orderRequest: boolean;
+  orderError: null | unknown;
+  newOrder: TOrder | null;
+
+  history: TOrder[];
+  historyRequest: boolean;
+
+  feed: TFeed | null;
+  feedRequest: boolean;
+  feedError: null | unknown;
+
+  selectedOrderId: number | null;
+  selectedOrder: TOrder | null;
+  selectedOrderRequest: boolean;
+  selectedOrderError: null | unknown;
 };
 
 export type TUser = {
@@ -37,4 +69,19 @@ export type TUser = {
   name: string;
 };
 
-export type TTabMode = 'bun' | 'sauce' | 'main';
+export type TUserState = {
+  isAuthChecked: boolean;
+  isAuthenticated: boolean;
+  userInfo: null | TUser;
+  authError: null | unknown;
+  authLoading: boolean;
+  regError: null | unknown;
+  regLoading: boolean;
+  profileUpdateError: null | unknown;
+  profileUpdateLoading: boolean;
+};
+
+export type TLoginData = {
+  email: string;
+  password: string;
+};

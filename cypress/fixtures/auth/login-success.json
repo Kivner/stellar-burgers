@@ -1,0 +1,8 @@
+{
+  "user": {
+    "email": "user@domain.com",
+    "name": "Test User"
+  },
+  "accessToken": "mock-access-token",
+  "refreshToken": "mock-refresh-token"
+}
