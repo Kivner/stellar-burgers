@@ -1,37 +1,33 @@
-/// <reference types="cypress" />
-// ***********************************************
-// This example commands.ts shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
-//
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
+declare namespace Cypress {
+  interface Chainable {
+    login(): Chainable<void>;
+    logout(): Chainable<void>;
+  }
+}
+
+Cypress.Commands.add('login', () => {
+  cy.intercept('POST', '**/api/auth/login', {
+    fixture: 'login.json'
+  }).as('loginRequest');
+
+  cy.visit('/login');
+  cy.get('[name=email]').type('test@example.com');
+  cy.get('[name=password]').type('password');
+  cy.get('button[type=submit]').click();
+  cy.wait('@loginRequest');
+});
+
+Cypress.Commands.add('logout', () => {
+  // Ensure we're on a page where logout is possible
+  cy.visit('/profile');
+
+  // More flexible selector for the logout button
+  cy.get('button').contains('Выход').should('exist').click();
+
+  // Optional: Wait for logout to complete
+  cy.intercept('POST', '**/api/auth/logout', {
+    statusCode: 200,
+    body: { success: true }
+  }).as('logoutRequest');
+  cy.wait('@logoutRequest');
+});

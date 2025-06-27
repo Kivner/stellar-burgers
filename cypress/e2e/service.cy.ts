@@ -12,6 +12,8 @@
 //   Проверяется, что модальное окно открылось и номер заказа верный.
 //   Закрывается модальное окно и проверяется успешность закрытия.
 //   Проверяется, что конструктор пуст.
+import { logoutApi } from '@api';
+
 describe('Burger Constructor', () => {
   // Константы ингредиентов
   const INGREDIENTS = {
@@ -134,19 +136,19 @@ describe('Burger Constructor', () => {
 
   describe('Order Creation', () => {
     beforeEach(() => {
-      // Настройка авторизации
-      cy.window().then((win) => {
-        win.localStorage.setItem('accessToken', 'access_token');
-      });
-      cy.setCookie('refreshToken', 'refresh_token');
+      // Mock API responses
+      cy.intercept('GET', '**/api/ingredients', {
+        fixture: 'ingredients.json'
+      }).as('getIngredients');
+      cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as('createOrder');
+      cy.intercept('GET', '**/api/auth/user', { fixture: 'user.json' }).as('getUser');
 
-      // Моки API
-      cy.intercept('GET', '**/api/auth/user', { fixture: 'user' }).as(
-        'getUserData'
-      );
-      cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as(
-        'createOrder'
-      );
+      // Login before each test
+      cy.login();
+
+      // Visit the main page after login
+      cy.visit('/');
+      cy.wait('@getIngredients');
     });
 
     it('Should create order, show modal with order number and clear constructor', () => {
@@ -189,8 +191,7 @@ describe('Burger Constructor', () => {
     });
 
     afterEach(() => {
-      cy.clearLocalStorage('accessToken');
-      cy.clearCookie('refreshToken');
+      cy.logout();
     });
   });
 });
