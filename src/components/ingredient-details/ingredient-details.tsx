@@ -7,19 +7,11 @@ import {
   useDispatch,
   useSelector
 } from '../../services/store';
-import {
-  constructorToolkitSlice,
-  fetchAllIngredients
-} from '../../services/store/constructor/constructor-slice';
+import { constructorToolkitSlice } from '../../services/store/constructor/constructor-slice';
 
 export const IngredientDetails: FC = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-
-  // Эффект для загрузки всех ингредиентов при монтировании компонента
-  useEffect(() => {
-    dispatch(fetchAllIngredients());
-  }, []);
   // Эффект для управления выбранным ингредиентом
   useEffect(() => {
     dispatch(constructorToolkitSlice.actions.setSelectedIngredient(id ?? null));

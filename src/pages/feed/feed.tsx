@@ -6,7 +6,6 @@ import {
   useDispatch,
   useSelector
 } from '../../services/store';
-import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
 import { fetchFeedData } from '../../services/store/order/order-slice';
 
 export const Feed: FC = () => {
@@ -18,7 +17,6 @@ export const Feed: FC = () => {
   // Эффект для загрузки данных при монтировании компонента
   useEffect(() => {
     dispatch(fetchFeedData());
-    dispatch(fetchAllIngredients());
   }, []);
 
   // Показываем Preloader во время загрузки

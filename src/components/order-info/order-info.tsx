@@ -9,7 +9,6 @@ import {
   useSelector
 } from '../../services/store';
 import { useParams } from 'react-router-dom';
-import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
 import { fetchOrderDetails } from '../../services/store/order/order-slice';
 
 export const OrderInfo: FC = () => {
@@ -19,7 +18,6 @@ export const OrderInfo: FC = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchOrderDetails(Number(id)));
-      dispatch(fetchAllIngredients());
     }
   }, [id]);
 

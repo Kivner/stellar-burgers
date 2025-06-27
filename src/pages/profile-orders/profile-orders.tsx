@@ -6,7 +6,6 @@ import {
   useSelector
 } from '../../services/store';
 import { Preloader } from '@ui';
-import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
 import { fetchUserOrders } from '../../services/store/order/order-slice';
 
 export const ProfileOrders: FC = () => {
@@ -17,7 +16,6 @@ export const ProfileOrders: FC = () => {
   // Эффект для загрузки данных при монтировании
   useEffect(() => {
     dispatch(fetchUserOrders());
-    dispatch(fetchAllIngredients());
   }, []);
 
   return request ? <Preloader /> : <ProfileOrdersUI orders={history} />;

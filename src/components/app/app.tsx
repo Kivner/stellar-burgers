@@ -17,6 +17,7 @@ import {
 import { AppHeader, IngredientDetails, Modal, OrderInfo } from '@components';
 import '../../index.css';
 import styles from './app.module.css';
+import { fetchAllIngredients } from '../../services/store/constructor/constructor-slice';
 
 const App = () => {
   const location = useLocation();
@@ -28,6 +29,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(verifyAuthStatus());
+    dispatch(fetchAllIngredients());
   }, [dispatch]);
 
   // Обработчик закрытия модального окна
