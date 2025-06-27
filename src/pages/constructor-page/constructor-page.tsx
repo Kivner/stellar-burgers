@@ -1,8 +1,4 @@
-import {
-  useSelector,
-  useDispatch,
-  constructorSelectors
-} from '../../services/store';
+import { useSelector, constructorSelectors } from '../../services/store';
 
 import styles from './constructor-page.module.css';
 

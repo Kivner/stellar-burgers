@@ -40,12 +40,6 @@ export type TOrder = {
   ingredients: string[];
 };
 
-export type TOrdersData = {
-  orders: TOrder[];
-  total: number;
-  totalToday: number;
-};
-
 export type TFeed = {
   orders: TOrder[];
   total: number;
@@ -85,4 +79,9 @@ export type TUserState = {
   regLoading: boolean;
   profileUpdateError: null | unknown;
   profileUpdateLoading: boolean;
+};
+
+export type TLoginData = {
+  email: string;
+  password: string;
 };

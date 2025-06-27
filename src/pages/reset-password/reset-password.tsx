@@ -2,6 +2,7 @@ import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resetPasswordApi } from '@api';
 import { ResetPasswordUI } from '@ui-pages';
+import { getErrorText } from '../../utils/error-utils';
 
 export const ResetPassword: FC = () => {
   const navigate = useNavigate();
@@ -27,17 +28,9 @@ export const ResetPassword: FC = () => {
     }
   }, [navigate]);
 
-  // Форматирование текста с ошибкой
-  const getErrorText = () => {
-    if (!error) return '';
-    if (typeof error === 'string') return error;
-    if (error instanceof Error) return error.message;
-    return 'Reset Password failed';
-  };
-
   return (
     <ResetPasswordUI
-      errorText={getErrorText()}
+      errorText={getErrorText(error)}
       password={password}
       token={token}
       setPassword={setPassword}

@@ -3,6 +3,7 @@ import { FC, SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import { useDispatch, userSelectors, useSelector } from '../../services/store';
 import { Preloader } from '@ui';
 import { UpdateUserProfile } from '../../services/store/user/user-slice';
+import { getErrorText } from '../../utils/error-utils';
 
 export const Profile: FC = () => {
   const user = useSelector(userSelectors.getUserProfile)!;
@@ -55,14 +56,6 @@ export const Profile: FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Форматирование текста с ошибкой
-  const getErrorText = () => {
-    if (!error) return '';
-    if (typeof error === 'string') return error;
-    if (error instanceof Error) return error.message;
-    return 'Update User failed';
-  };
-
   return request ? (
     <Preloader />
   ) : (
@@ -72,7 +65,7 @@ export const Profile: FC = () => {
       handleCancel={handleFormReset}
       handleSubmit={handleFormSubmit}
       handleInputChange={handleFieldChange}
-      updateUserError={getErrorText()}
+      updateUserError={getErrorText(error)}
     />
   );
 };

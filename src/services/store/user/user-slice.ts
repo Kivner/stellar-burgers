@@ -1,11 +1,10 @@
-import { TUserState } from '@utils-types';
+import { TLoginData, TUserState } from '@utils-types';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
   getUserApi,
   loginUserApi,
   logoutApi,
   registerUserApi,
-  TLoginData,
   TRegisterData,
   updateUserApi
 } from '@api';

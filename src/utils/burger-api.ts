@@ -1,5 +1,5 @@
 import { setCookie, getCookie } from './cookie';
-import { TFeed, TIngredient, TOrder, TOrdersData, TUser } from './types';
+import { TFeed, TIngredient, TLoginData, TOrder, TUser } from './types';
 
 const URL = process.env.BURGER_API_URL;
 
@@ -152,11 +152,6 @@ export const registerUserApi = (data: TRegisterData) =>
       if (data?.success) return data;
       return Promise.reject(data);
     });
-
-export type TLoginData = {
-  email: string;
-  password: string;
-};
 
 export const loginUserApi = (data: TLoginData) =>
   fetch(`${URL}/auth/login`, {
