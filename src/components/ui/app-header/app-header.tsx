@@ -7,7 +7,7 @@ import {
   Logo,
   ProfileIcon
 } from '@zlden/react-developer-burger-ui-components';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 
 export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName }) => (
@@ -21,6 +21,12 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName }) => (
           to={`/`}
         >
           <BurgerIcon type={'primary'} />
+          <Link
+            to='/'
+            className={
+              location.pathname === '/' ? styles.link_active : styles.link
+            }
+          />
           <p className='text text_type_main-default ml-2 mr-10'>Конструктор</p>
         </NavLink>
         <NavLink
@@ -33,9 +39,9 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName }) => (
           <p className='text text_type_main-default ml-2'>Лента заказов</p>
         </NavLink>
       </div>
-      <div className={styles.logo}>
+      <NavLink to={`/`} className={styles.logo}>
         <Logo className='' />
-      </div>
+      </NavLink>
       <NavLink
         className={({ isActive }) =>
           clsx(
