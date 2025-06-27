@@ -12,7 +12,6 @@
 //   Проверяется, что модальное окно открылось и номер заказа верный.
 //   Закрывается модальное окно и проверяется успешность закрытия.
 //   Проверяется, что конструктор пуст.
-import { logoutApi } from '@api';
 
 describe('Burger Constructor', () => {
   // Константы ингредиентов
@@ -136,17 +135,12 @@ describe('Burger Constructor', () => {
 
   describe('Order Creation', () => {
     beforeEach(() => {
-      // Mock API responses
       cy.intercept('GET', '**/api/ingredients', {
         fixture: 'ingredients.json'
       }).as('getIngredients');
       cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as('createOrder');
       cy.intercept('GET', '**/api/auth/user', { fixture: 'user.json' }).as('getUser');
-
-      // Login before each test
       cy.login();
-
-      // Visit the main page after login
       cy.visit('/');
       cy.wait('@getIngredients');
     });
