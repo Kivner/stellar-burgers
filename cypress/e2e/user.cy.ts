@@ -15,7 +15,7 @@ describe('Auth System Reducer and Actions', () => {
   // Перехват всех запросов к бэкенду
   beforeEach(() => {
     cy.intercept('**/api/**', (req) => {
-      req.headers['authorization'] = `Bearer fake-access-token`;
+      req.headers.authorization = `Bearer fake-access-token`;
     }).as('backendRequest');
   });
 
